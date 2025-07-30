@@ -1,32 +1,53 @@
 {
-  "name": "Redroid-Frida-Lab",
-  // 使用一个包含常用工具的基础镜像
+  // --- 容器命名与基础镜像 ---
+  // 为您的开发容器环境起一个描述性的名称
+  "name": "Android Analysis Lab (Redroid + Frida)",
+  // 使用一个稳定且包含常用工具的官方基础镜像 (Ubuntu)
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+
+  // --- 核心功能配置 ---
   "features": {
-    // 关键：添加 Docker-in-Docker 支持，让我们可以运行 Docker 命令
+    // 关键：启用 Docker-in-Docker 功能，允许我们在 Codespace 内部运行 Docker 命令
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest"
     },
-    // 添加 Python 和 pip，用于运行 Frida 脚本和修复工具
+    // 启用 Python 功能，用于安装和运行 frida-tools 及我们的分析脚本
     "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.11"
+      "version": "3.11", // 指定一个明确的 Python 版本
+      "installTools": true
     }
   },
-  // 转发 Redroid 的 ADB 端口。Codespaces 会自动处理
+
+  // --- 容器创建后的生命周期命令 ---
+  // 使用 "onCreateCommand" 在容器首次创建时运行。
+  // 它比 postCreateCommand 更可靠，能确保在具有正确权限的环境中执行。
+  // 这个命令只会运行一次，在后续重启 Codespace 时不会重复运行。
+  "onCreateCommand": {
+    // 为命令添加一个标签，方便在日志中识别
+    "install-tools": "sudo apt-get update && sudo apt-get install -y wget adb && pip install --upgrade pip && pip install frida-tools"
+  },
+
+  // --- 端口转发 ---
+  // 自动将容器内的 5555 端口转发出去，方便 ADB 连接
   "forwardPorts": [5555],
-  // 在容器创建后自动执行的命令
-  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y wget adb && pip install frida-tools",
-  // VS Code 设置，例如让终端使用 bash
+
+  // --- 容器运行参数 ---
+  // 关键：Redroid 必须在特权模式下运行才能正常工作
+  "runArgs": ["--privileged"],
+
+  // --- VS Code 编辑器与终端的自定义配置 ---
   "customizations": {
     "vscode": {
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "bash"
+        // 将 bash 设置为终端的默认配置文件
+        "terminal.integrated.defaultProfile.linux": "bash",
+        // 为 Python 脚本提供智能提示和调试支持
+        "python.defaultInterpreterPath": "/usr/bin/python3"
       },
       "extensions": [
+        // 推荐安装官方的 Python 扩展
         "ms-python.python"
       ]
     }
-  },
-  // 给予 Codespace 运行特权容器的能力，Redroid 必需
-  "runArgs": ["--privileged"]
+  }
 }
