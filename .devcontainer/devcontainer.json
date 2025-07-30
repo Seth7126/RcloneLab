@@ -1,0 +1,32 @@
+{
+  "name": "Redroid-Frida-Lab",
+  // 使用一个包含常用工具的基础镜像
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    // 关键：添加 Docker-in-Docker 支持，让我们可以运行 Docker 命令
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest"
+    },
+    // 添加 Python 和 pip，用于运行 Frida 脚本和修复工具
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    }
+  },
+  // 转发 Redroid 的 ADB 端口。Codespaces 会自动处理
+  "forwardPorts": [5555],
+  // 在容器创建后自动执行的命令
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y wget adb && pip install frida-tools",
+  // VS Code 设置，例如让终端使用 bash
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": [
+        "ms-python.python"
+      ]
+    }
+  },
+  // 给予 Codespace 运行特权容器的能力，Redroid 必需
+  "runArgs": ["--privileged"]
+}
